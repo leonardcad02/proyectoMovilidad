@@ -1,21 +1,19 @@
-from flask import Flask, request, make_response, redirect, render_template, session
-from flask_bootstrap import Bootstrap
-from flask_wtf import FlaskForm
-from wtforms.fields import StringField, PasswordField, SubmitField
-from  wtforms.validators import DataRequired
+from flask import request, make_response, redirect, render_template, session, url_for, flash
+import unittest
+from app import create_app
+from app.forms import LoginForm
 
-app = Flask(__name__)
-app.config['ENV'] = 'development'
-app.config['SECRET_KEY'] = 'SUPER SECRETO'
 
-bootstrap = Bootstrap(app)
+app = create_app()
 
 todos = ['Todo 1', 'Todo 2', 'Todo 3']
 
-class LoginForm(FlaskForm):
-    username = StringField('Nombre de Usuario', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    submit  = SubmitField('Enviar')
+
+@app.cli.command()
+def test():
+    tests = unittest.TestLoader().discover('test')
+    unittest.TextTestRunner.run(tests)
+    
 
 
 @app.errorhandler(500)
@@ -39,16 +37,26 @@ def index():
     return response
 
 
-@app.route('/hello')
+@app.route('/hello', methods=['GET','POST'])
 def hello():
     userIp = session.get('userIp')
     loginForm = LoginForm()
+    username = session.get('username')
     context = {
         'userIp': userIp,
         'todos': todos,
         'loginForm': loginForm,
+        'username': username,
     }
+    if loginForm.validate_on_submit():
+        username = loginForm.username.data
+        session['username'] =username
+        flash('Nombre de usario registrado con éxito!')
 
+        
+        return redirect(url_for('index'))
+
+        
     return render_template('hello.html', **context)
 
 
