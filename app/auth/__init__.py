@@ -1,5 +1,6 @@
-from flask import Blueprints
+from flask import Blueprint
 
-auth = Blueprints('name', __name__, url_prefix = '/auth')
+auth = Blueprint('auth', __name__, url_prefix = '/auth')
 
-from . import auth
+#vista
+from . import views

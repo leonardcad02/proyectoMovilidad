@@ -1,33 +1,25 @@
 from flask import request, make_response, redirect, render_template, session, url_for, flash
 import unittest
 from app import create_app
-from app.forms import LoginForm
+from flask_login import login_required, current_user
+from app.firestone_service import get_todos, get_users
 
 
 app = create_app()
 
-todos = ['Todo 1', 'Todo 2', 'Todo 3']
-
-
 @app.cli.command()
 def test():
-    tests = unittest.TestLoader().discover('test')
-    unittest.TextTestRunner.run(tests)
-    
-
+    tests = unittest.TestLoader().discover('tests')
+    unittest.TextTestRunner().run(tests)    
 
 @app.errorhandler(500)
-
 def internal_server_error(error):
     return render_template('500.html', error=error)
 
 @app.errorhandler(404)
-
 def not_found(error):
     return render_template('404.html', error= error)
   
-
-
 @app.route('/')
 def index():
     userIp = request.remote_addr
@@ -37,26 +29,25 @@ def index():
     return response
 
 
-@app.route('/hello', methods=['GET','POST'])
+@app.route('/hello', methods=['GET'])
+@login_required
 def hello():
     userIp = session.get('userIp')
-    loginForm = LoginForm()
-    username = session.get('username')
+    username = current_user.id
     context = {
         'userIp': userIp,
-        'todos': todos,
-        'loginForm': loginForm,
+        'todos': get_todos(user_id = username),
         'username': username,
-    }
-    if loginForm.validate_on_submit():
-        username = loginForm.username.data
-        session['username'] =username
-        flash('Nombre de usario registrado con éxito!')
+    }      
 
-        
-        return redirect(url_for('index'))
+    users = get_users()
+    print(users)
+    for  user in users:
+        print(users)
+        print("Entro")
+        print(user.id)
+        print(user.to_dict()['password'])  
 
-        
     return render_template('hello.html', **context)
 
 
